@@ -13,21 +13,34 @@ def verify_lines(vl_list, vl_line):
     return vl_chosen_line
 
 
-def show_lines_list():
-    sll_data = open("./data/lines.txt")
-    sll_line_list = sll_data.readlines()
-    print("\nList of Lines\n")
-    for sll_counter in sll_line_list:  # LOOP TO PRINT EACH LINE IN LIST
-        print(sll_counter, end='')
-    sll_data.close()
-    return sll_line_list
+def verify_schedule_lines(vsl_list, vsl_line):
+    vsl_chosen_line = []  # IF THE LINE WASN'T FOUND RETURN AN EMPTY LIST
+    vsl_data = open("./data/schedules.txt", "r")
+    for vsl_counter in range(len(vsl_list)):
+        vsl_verify = vsl_data.readline(2)  # READ THE 2 FIRST DIGITS OF EACH LINE
+        if vsl_verify == vsl_line:
+            vsl_chosen_line.append(int(vsl_counter))  # IF THE VERIFIED DIGIT IS OK, RETURN THE LIST POSITION OF IT
+        vsl_data.readline()  # MAKE THE PROGRAM GO TO NEXT LINE
+    vsl_data.close()
+    return vsl_chosen_line
 
 
-def get_lines_list():
+def get_lines_list(gll_show):
     gll_data = open("./data/lines.txt")
     gll_line_list = gll_data.readlines()
+    if gll_show:
+        print("\nList of Lines\n")
+        for gll_counter in gll_line_list:  # LOOP TO PRINT EACH LINE IN LIST
+            print(gll_counter, end='')
     gll_data.close()
     return gll_line_list
+
+
+def get_schedules_list():
+    gsl_data = open("./data/schedules.txt")
+    gsl_line_list = gsl_data.readlines()
+    gsl_data.close()
+    return gsl_line_list
 
 
 def binary_selection(bs_selection):
@@ -89,7 +102,7 @@ while selection == 0:
     match selection:
         # SEE LINE LIST
         case ("1"):
-            show_lines_list()
+            get_lines_list(True)
             print("\nType anything to go back\n")
             input()
             selection = 0
@@ -119,10 +132,10 @@ while selection == 0:
                 print("\nWrite the line number, (two digits):", end=' ')
                 sub_selection = 1
                 line_number = 0
-                line_list = get_lines_list()
+                line_list = get_lines_list(False)
                 while sub_selection == 1:
                     line_number = input()
-                    chosen_line = verify_lines(line_list, line_number)
+                    chosen_line = verify_lines(line_list, 'lines.txt')
                     # VERIFY IF THE LINE NUMBER IS VALID
                     if len(line_number) > 2 or len(line_number) < 2 or int(line_number) <= 0 or chosen_line != -1:
                         print("\nInvalid number typed, try again:", end=' ')
@@ -142,7 +155,7 @@ while selection == 0:
         case ("6"):
             selection = 1
             while selection == 1:
-                line_list = show_lines_list()
+                line_list = get_lines_list(True)
                 print("\nWrite the line number you want to add a schedule:", end=' ')
                 line_number = input()
                 chosen_line = verify_lines(line_list, line_number)
@@ -215,8 +228,9 @@ while selection == 0:
                         data.write(line_number + " - " + vehicle_code + " - " + vehicle_hour + ":" + vehicle_minutes +
                                    " " + vehicle_description + "\n")
                     else:
-                        data.write(line_number + " - " + vehicle_code + " - " + vehicle_hour + ":" + vehicle_minutes + "\n")
-                    print("\nType 1 to add another line or 0 to go back\n")
+                        data.write(
+                            line_number + " - " + vehicle_code + " - " + vehicle_hour + ":" + vehicle_minutes + "\n")
+                    print("\nType 1 to add another schedule or 0 to go back\n")
                     data.close()
                     sub_selection = 1
                     while sub_selection == 1:
@@ -226,7 +240,7 @@ while selection == 0:
         case ("7"):
             selection = 1
             while selection == 1:
-                line_list = show_lines_list()
+                line_list = get_lines_list(True)
                 # CHOOSE THE LINE
                 print("\nWrite the line number you want to delete:", end=' ')
                 line_number = input()
@@ -241,11 +255,6 @@ while selection == 0:
                         selection, sub_selection = binary_selection(selection)
                 # IF THE LINE WAS FOUND
                 else:
-                    # DELETE SCHEDULE FILE OF THE LINE IF IT'S EXIST
-                    file_name = line_list[chosen_line]
-                    file_name = "schedule_line_" + file_name[0:2] + ".txt"
-                    if os.path.isfile("./data/" + file_name):
-                        os.remove("./data/" + file_name)
                     # REMOVE FROM THE LIST OF LINES THE DELETED LINE
                     line_list.pop(chosen_line)
                     # WIPE ALL CONTENT FROM THE DATA FILE
@@ -257,11 +266,27 @@ while selection == 0:
                     for counter in range(len(line_list)):
                         data.write(line_list[counter])
                     data.close()
-                    print("\nType 1 to delete another line or 0 to go back\n")
-                    sub_selection = 1
-                    while sub_selection == 1:
-                        selection = input()
-                        selection, sub_selection = binary_selection(selection)
+                    # CREATE A SCHEDULE LIST AND AN ARRAY WITH THE SCHEDULES TO BE DELETED
+                    schedule_list = get_schedules_list()
+                    chosen_schedules = verify_schedule_lines(schedule_list, line_number)
+                    if chosen_schedules:
+                        # REMOVE FROM THE SCHEDULES LIST THE DELETED LINE SCHEDULES
+                        for counter in chosen_schedules:
+                            schedule_list.pop(counter)
+                        # WIPE ALL CONTENT FROM THE DATA FILE
+                        data = open("./data/schedules.txt", "w")
+                        data.write('')
+                        data.close()
+                        # WRITE THE NEW LIST OF SCHEDULES IN DATA FILE
+                        data = open("./data/schedules.txt", "a")
+                        for counter in range(len(schedule_list)):
+                            data.write(schedule_list[counter])
+                        data.close()
+                        print("\nType 1 to delete another line or 0 to go back\n")
+                        sub_selection = 1
+                        while sub_selection == 1:
+                            selection = input()
+                            selection, sub_selection = binary_selection(selection)
         # DELETE A SCHEDULE
         case ("8"):
             print("WIP")
