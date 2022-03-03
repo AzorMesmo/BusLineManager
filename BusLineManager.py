@@ -108,7 +108,35 @@ while selection == 0:
             selection = 0
         # SEE LINES SCHEDULE
         case ("2"):
-            print("WIP")
+            line_list = get_lines_list(True)
+            print("\nWrite the line number you want to see the schedule:", end=' ')
+            line_number = input()
+            chosen_line = verify_lines(line_list, line_number)
+            if chosen_line == -1:
+                print("\nThis line was not found")
+                print("\nType 1 to try again or 0 to go back:", end=' ')
+                sub_selection = 1
+                while sub_selection == 1:
+                    selection = input()
+                    selection, sub_selection = binary_selection(selection)
+            # IF THE LINE WAS FOUND
+            else:
+                print("")
+                data = open("./data/schedules.txt")
+                schedule_list = data.readlines()
+                data.close()
+                data = open("./data/schedules.txt")
+                for counter in schedule_list:
+                    line_number_extra = data.readline(2)
+                    if line_number_extra == line_number:
+                        vehicle_code = data.readline(8)
+                        data.readline(3)  # SKIP THREE CHARACTERS
+                        vehicle_time = data.readline(5)
+                        print(vehicle_time + vehicle_code)
+                    data.readline()  # GO TO NEXT LINE
+            print("\nType anything to go back\n")
+            input()
+            selection = 0
         # SEE THE VEHICLE LIST
         case ("3"):
             data = open("./data/vehicles.txt")
@@ -222,6 +250,23 @@ while selection == 0:
                                 sub_selection = 0
                             else:
                                 sub_selection = 0
+                        # VERIFY IF THE SAME VEHICLE ISN'T USED MULTIPLE TIMES AT THE SAME TIME
+                        data.extra = open("./data/schedules.txt", "r")
+                        schedule_list = data.extra.readlines()
+                        data.extra.close()
+                        data.extra = open("./data/schedules.txt", "r")
+                        for counter in schedule_list:
+                            data.extra.readline(5)  # SKIP THE FIRST FIVE CHARACTERS OF EACH LINE
+                            verify_vehicle_code = data.extra.readline(5)  # GET THE CODE IN SCHEDULE
+                            data.extra.readline(3)  # SKIP MORE THREE CHARACTERS
+                            verify_vehicle_hour = data.extra.readline(2)  # GET THE HOUR IN SCHEDULE
+                            data.extra.readline(1)  # SKIP MORE ONE CHARACTER
+                            verify_vehicle_minutes = data.extra.readline(2)  # GET THE MINUTES IN SCHEDULE
+                            data.extra.readline()  # GO TO NEXT LINE
+                            if vehicle_code == verify_vehicle_code and vehicle_hour == verify_vehicle_hour and \
+                                    vehicle_minutes == verify_vehicle_minutes:
+                                print("\nThis vehicle already has a route at this time, try again:", end=' ')
+                                sub_selection = 1
                     print("\nWrite a description, (optional):", end=' ')
                     vehicle_description = input()
                     if vehicle_description != "":
@@ -230,8 +275,8 @@ while selection == 0:
                     else:
                         data.write(
                             line_number + " - " + vehicle_code + " - " + vehicle_hour + ":" + vehicle_minutes + "\n")
-                    print("\nType 1 to add another schedule or 0 to go back\n")
                     data.close()
+                    print("\nType 1 to add another schedule or 0 to go back\n")
                     sub_selection = 1
                     while sub_selection == 1:
                         selection = input()
